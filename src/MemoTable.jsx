@@ -8,53 +8,56 @@ import { faBan } from "@fortawesome/free-solid-svg-icons";
 import db from "./firebase";
 import {
   collection,
-  doc,
-  setDoc,
-  getDocs,
   onSnapshot,
   addDoc,
+  serverTimestamp,
+  deleteDoc,
+  doc,
+  query,
+  orderBy,
 } from "firebase/firestore";
 
 export const MemoTable = () => {
+  //inputareaに入力する文字列
   const [inputmemo, setInputmemo] = useState("");
+
+  //memoのデータ
   const [posmemo, setPosMemo] = useState([]);
 
+  //inputarea入力時の変化
   const onChangeInputMemo = (event) => setInputmemo(event.target.value);
 
-  const onClickAdd = (e) => {
-    if (inputmemo === "") return;
-    const newPosmemo = [...posmemo, inputmemo];
-    setPosMemo(newPosmemo);
+  // //データ取得
+  const [posts, setPosts] = useState([]);
+  useEffect(() => {
+    const collectionRef = collection(db, "posts");
+    const q = query(collectionRef, orderBy("timestamp"));
+
+    const unsub = onSnapshot(q, (Snapshot) =>
+      setPosts(Snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
+    );
+    return unsub;
+  }, []);
+
+  //データ追加
+  const onClickAdd = async (e) => {
+    await addDoc(collection(db, "posts"), {
+      memo: inputmemo,
+      timestamp: serverTimestamp(),
+    });
     setInputmemo("");
     e.preventDefault();
-    //const newMemoRef = doc(collection(db,"posts"));
-    //setDoc(newMemoRef);
   };
-
-  const onClickDelete = (index) => {
-    const newPosmemo = [...posmemo];
-    newPosmemo.splice(index, 1);
-    setPosMemo(newPosmemo);
+  //データ削除
+  const onClickDelete = async (id) => {
+    const postData = doc(db, "posts", id);
+    await deleteDoc(postData);
   };
 
   //modal
   const [Modal, open, close] = useModal("root", {
     preventScroll: true,
   });
-
-  //firebase////////////////////////////////////////////////
-  //const [posts, setPosts] = useState([]);
-  //useEffect(() => {
-  // const postData = collection(db, "posts");
-  //getDocs(postData).then((snapShot) => {
-  // setPosts(snapShot.docs.map((doc) => ({ ...doc.data() })));
-  //onSnapshot(postData, (post) => {
-  //setPosts(post.docs.map((doc) => ({ ...doc.data() })));
-  //});
-  //});
-  //}, []);
-  //firebase////////////////////////////////////////////////
-  //firebaseから取得するデータを定義
 
   return (
     <>
@@ -84,18 +87,23 @@ export const MemoTable = () => {
       </div>
 
       <Sdiv>
-        {posmemo.map((text, index) => {
+        {posts.map((memo) => {
           return (
-            <SPos key={text} drag>
+            <SPos
+              key={memo.id}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 260, damping: 30 }}
+            >
               <Delete>
                 　
                 <FontAwesomeIcon
                   icon={faBan}
                   size="lg"
-                  onClick={() => onClickDelete()}
+                  onClick={(e) => onClickDelete(memo.id)}
                 />
               </Delete>
-              <p>{text}</p>
+              <p>{memo.memo}</p>
             </SPos>
           );
         })}
@@ -106,6 +114,8 @@ export const MemoTable = () => {
 
 const Sdiv = styled.div`
   background-color: white;
+  display: flex;
+  flex-wrap: wrap;
 `;
 
 const Modalform = styled.form`
@@ -141,6 +151,7 @@ const Stextarea = styled.textarea`
   width: 100%;
   padding: 10px;
   font-size: 30px;
+  white-space: pre-wrap;
 `;
 
 const Sbutton = styled.button`
@@ -156,9 +167,9 @@ const Sbutton = styled.button`
 
 const SPos = styled(motion.div)`
   background-color: lightyellow;
-  width: 300px;
+  width: 250px;
   border: 1px solid white;
-  height: 250px;
+  height: 200px;
   padding: 10px;
   margin: 15px;
   box-shadow: 0px 8px 16px -2px rgba(10, 10, 10, 0.2),
@@ -171,8 +182,8 @@ const Delete = styled.div`
   color: teal;
   display: flex;
   position: relative;
-  left: 260px;
-  bottom: 15px;
+  left: 200px;
+  bottom: 10px;
   border-radius: 999px;
   &:hover {
     color: red;

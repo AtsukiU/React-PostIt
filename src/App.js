@@ -8,7 +8,7 @@ export function App() {
   return (
     <Sdiv className="App">
       <Header />
-      <MemoTable />
+      <MemoTable Text={"memo"}/>
       <Footer />
     </Sdiv>
   );
