@@ -16,6 +16,8 @@ import {
   query,
   orderBy,
 } from "firebase/firestore";
+import Draggable from "react-draggable";
+import { useRef } from "react";
 
 export const MemoTable = () => {
   //inputareaに入力する文字列
@@ -32,7 +34,6 @@ export const MemoTable = () => {
   useEffect(() => {
     const collectionRef = collection(db, "posts");
     const q = query(collectionRef, orderBy("timestamp"));
-
     const unsub = onSnapshot(q, (Snapshot) =>
       setPosts(Snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
     );
@@ -46,8 +47,8 @@ export const MemoTable = () => {
       timestamp: serverTimestamp(),
     });
     setInputmemo("");
-    e.preventDefault();
   };
+
   //データ削除
   const onClickDelete = async (id) => {
     const postData = doc(db, "posts", id);
@@ -58,6 +59,26 @@ export const MemoTable = () => {
   const [Modal, open, close] = useModal("root", {
     preventScroll: true,
   });
+
+  //位置情報
+  const [currentPosition, setCurrentPosition] = useState({
+    xRate: 150,
+    yRate: 150,
+  });
+
+  // const isDraggingRef = useRef(false);
+
+  // const onDrag = (e: DraggableEvent, data: Draggabledata) => {
+  //   setCurrentPosition({ xRate: data.lastX, yRate: data.lastY });
+  //   // isDraggingRef.current = true;
+  // };
+
+  // const onStop = () => {
+  //   if (!isDraggingRef.current) {
+  //     setCurrentRotate(currentRotate + 90);
+  //     isDraggingRef.current = false;
+  //   }
+  // };
 
   return (
     <>
@@ -89,6 +110,10 @@ export const MemoTable = () => {
       <Sdiv>
         {posts.map((memo) => {
           return (
+            // <Draggable
+            //   position={{ x: currentPosition.xRate, y: currentPosition.yRate }}
+            //   onDrag={onDrag}
+            // >
             <SPos
               key={memo.id}
               initial={{ scale: 0 }}
@@ -105,6 +130,7 @@ export const MemoTable = () => {
               </Delete>
               <p>{memo.memo}</p>
             </SPos>
+            // </Draggable>
           );
         })}
       </Sdiv>
@@ -139,6 +165,7 @@ const ModalButton = styled.button`
   background-color: teal;
   color: white;
   padding: 7px;
+  margin-left: 10px;
   box-shadow: 0px 0px 16px -6px rgba(0, 0, 0, 0.6);
 `;
 
@@ -175,7 +202,6 @@ const SPos = styled(motion.div)`
   box-shadow: 0px 8px 16px -2px rgba(10, 10, 10, 0.2),
     0px 0px 0px 1px rgba(10, 10, 10, 0.02);
   white-space: pre-wrap;
-  potision: absolute;
 `;
 
 const Delete = styled.div`

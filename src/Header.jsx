@@ -8,9 +8,9 @@ export const Header = () => {
     <>
     <HeaderContainer>
       <SHeader>Memo</SHeader>
-      <LoginButton>
-      <MdLogin size="30"/>
-      </LoginButton>
+      {/* <LoginButton>
+      <MdLogin size="30"/> */}
+      {/* </LoginButton> */}
     </HeaderContainer>
     </>
   );
